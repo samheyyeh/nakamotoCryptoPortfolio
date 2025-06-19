@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Ethereum Holdings</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h1>Ethereum Portfolio for {{ address }}</h1>
+
+        {% if data.native %}
+            <h2>Native ETH</h2>
+            <p>
+                {{ data.native.balance }} ETH (~${{ data.native.usd_value | round(2) }})
+                {% if data.native.change_24h is not none %}
+                    <span style="color: white">
+                        (24h: {{ data.native.change_24h | round(2) }}%)
+                    </span>
+                {% endif %}
+            </p>
+        {% else %}
+            <p>ETH balance is dust or not found.</p>
+        {% endif %}
+
+        {% if data.tokens %}
+            <h2>ETH Ecosystem Tokens &gt; $1</h2>
+            <ul>
+                {% for token in data.tokens %}
+                    <li>
+                        <span>{{ token.symbol }}</span>
+                        <span>
+                            {{ token.amount | round(token.decimals) }} (~${{ token.usd_value | round(2) }})
+                            {% if token.change_24h is not none %}
+                                <span style="color: white">
+                                    (24h: {{ token.change_24h | round(2) }}%)
+                                </span>
+                            {% endif %}
+                        </span>
+                    </li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <p>No ERC-20 tokens over $1 USD.</p>
+        {% endif %}
+
+        <a href="/" class="button">Back to Home</a>
+    </div>
+</body>
+</html>

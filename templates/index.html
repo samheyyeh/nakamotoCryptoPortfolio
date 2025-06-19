@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Portfolio Dashboard</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h1>Check Your Wallet Holdings</h1>
+
+        <!-- Ethereum Form -->
+        <form action="/eth" method="post">
+            <label>Ethereum Address:</label><br>
+            <input type="text" name="address" required>
+            <button class="button" type="submit">View ETH Holdings</button>
+        </form>
+
+        <br><br>
+
+        <!-- Solana Form -->
+        <form action="/sol" method="post">
+            <label>Solana Address:</label><br>
+            <input type="text" name="address" required>
+            <button class="button" type="submit">View SOL Holdings</button>
+        </form>
+
+        <br><br>
+        <hr>
+        <h2>Manual Token Valuation</h2>
+        <form id="manualTokenForm" onsubmit="return fetchTokenValue(event)">
+            <label>Token Ticker (e.g., HYPE, ETH):</label><br>
+            <input type="text" id="tokenSymbol" required><br><br>
+
+            <label>Quantity:</label><br>
+            <input type="number" id="tokenQuantity" step="any" required><br><br>
+
+            <button class="button" type="submit">Get USD Value</button>
+        </form>
+
+        <p id="manualTokenResult" style="margin-top: 20px;"></p>
+
+        <a href="{{ url_for('logout') }}" class="button logout">Logout</a>
+    </div>
+
+    <script>
+        const symbolToIdMap = {
+            btc: "bitcoin",
+            eth: "ethereum",
+            sol: "solana",
+            usdt: "tether",
+            usdc: "usd-coin",
+            dai: "dai",
+            link: "chainlink",
+            arb: "arbitrum",
+            op: "optimism",
+            matic: "polygon",
+            bnb: "binancecoin",
+            hype: "hyperliquid",
+            ltc: "litecoin",
+            ada: "cardano",
+            dot: "polkadot",
+            pepe: "pepe",
+            shib: "shiba-inu"
+        };
+
+        async function fetchTokenValue(event) {
+            event.preventDefault();
+
+            const symbolInput = document.getElementById("tokenSymbol");
+            const quantityInput = document.getElementById("tokenQuantity");
+            const resultElement = document.getElementById("manualTokenResult");
+
+            const symbol = symbolInput.value.trim().toLowerCase();
+            const quantity = parseFloat(quantityInput.value);
+
+            if (!symbol || isNaN(quantity) || quantity <= 0) {
+                resultElement.textContent = "Please enter a valid symbol and quantity.";
+                return;
+            }
+
+            try {
+                let coinId = symbolToIdMap[symbol];
+
+                // Fallback to dynamic lookup
+                if (!coinId) {
+                    const listResp = await fetch("https://api.coingecko.com/api/v3/coins/list");
+                    const tokenList = await listResp.json();
+
+                    const match = tokenList.find(token =>
+                        token.symbol.toLowerCase() === symbol && (
+                            token.id === symbol || token.name.toLowerCase().includes(symbol)
+                        )
+                    ) || tokenList.find(token => token.symbol.toLowerCase() === symbol);
+
+                    if (!match) {
+                        resultElement.textContent = `Token symbol "${symbol}" not found.`;
+                        return;
+                    }
+
+                    coinId = match.id;
+                }
+
+                // Fetch price and 24h change
+                const priceResp = await fetch(`https://api.coingecko.com/api/v3/simple/price?ids=${coinId}&vs_currencies=usd&include_24hr_change=true`);
+                const priceData = await priceResp.json();
+                const info = priceData[coinId];
+
+                if (!info || info.usd === undefined) {
+                    resultElement.textContent = `Could not retrieve price for "${symbol.toUpperCase()}".`;
+                    return;
+                }
+
+                const usdValue = (quantity * info.usd).toFixed(2);
+                const change = info.usd_24h_change?.toFixed(2);
+                const changeDisplay = change !== undefined ? ` (24h: ${change >= 0 ? "+" : ""}${change}%)` : "";
+
+                resultElement.textContent = `${quantity} ${symbol.toUpperCase()} ≈ $${usdValue} USD${changeDisplay}`;
+            } catch (error) {
+                resultElement.textContent = "An error occurred while fetching data.";
+                console.error(error);
+            }
+        }
+    </script>
+</body>
+</html>
