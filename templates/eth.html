@@ -31,11 +31,6 @@
                         <span>{{ token.symbol }}</span>
                         <span>
                             {{ token.amount | round(token.decimals) }} (~${{ token.usd_value | round(2) }})
-                            {% if token.change_24h is not none %}
-                                <span style="color: white">
-                                    (24h: {{ token.change_24h | round(2) }}%)
-                                </span>
-                            {% endif %}
                         </span>
                     </li>
                 {% endfor %}
