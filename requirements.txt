@@ -3,5 +3,4 @@ requests==2.31.0
 python-dotenv==1.0.0
 gunicorn==20.1.0
 moralis==0.1.49
-openapi_evm_api
 typing-extensions==4.5.0
