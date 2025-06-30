@@ -2,4 +2,5 @@ Flask==2.3.2
 requests==2.31.0
 python-dotenv==1.0.0
 gunicorn==20.1.0
-moralis==1.0.2
+moralis==0.1.49
+typing-extensions>=4.0.0
